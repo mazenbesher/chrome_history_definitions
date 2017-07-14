@@ -2,8 +2,9 @@
 
 - [1. Functionality](#1-functionality)
 - [2. To save results](#2-to-save-results)
-- [3. TODO simple:](#3-todo-simple)
-- [4. TODO hard:](#4-todo-hard)
+- [3. TODO](#3-todo)
+    - [simple:](#simple)
+    - [hard:](#hard)
 
 <!-- /TOC -->
 
@@ -13,7 +14,8 @@ This script extracts the words after any define search query (see the regex `def
 # 2. To save results
 Change `OUTPUT_*` options.
 
-# 3. TODO simple: 
+# 3. TODO 
+## simple: 
 1. [x] add definitions to exports (through the option `ADD_DEFINITIONS` with get calls to `api.pearson.com`)
 1. [x] spell check (done with pyenchant, controlled with the option `SPELL_CHECK `)
 1. [x] trim words (option `TRIM`)
@@ -22,6 +24,6 @@ Change `OUTPUT_*` options.
 1. [ ] arg params for option toggles and constants
 1. [ ] add help for CLI
 
-# 4. TODO hard:
+## hard:
 1. [ ] csv exprot with selected headers (definition, synonyms, ... other fields from API)
 1. [ ] quiz mode (e.x. given the definition choose the word)
