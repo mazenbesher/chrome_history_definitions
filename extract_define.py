@@ -71,7 +71,6 @@ if NO_DUPLICATES:
 
 if ADD_DEFINITIONS:
     import urllib.request
-    from collections import OrderedDict
 
 # db path auto generating
 if DB_PATH == None:
