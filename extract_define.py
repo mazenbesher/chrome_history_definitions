@@ -14,18 +14,18 @@ parser = argparse.ArgumentParser()
 # options
 parser.add_argument("-t","--trim", help="trim words from spaces, tabs and common delimiters such as \"", action="store_true")
 parser.add_argument("-sp","--spell-check", help="check if words are spelled correctly (requires pyenchant)", action="store_true")
-parser.add_argument("-as","--accept-sentences", help="accept entries if history consisting from multiple words", action="store_true")
+parser.add_argument("-as","--accept-sent", help="accept entries if history consisting from multiple words", action="store_true")
 parser.add_argument("-np","--no-duplicates", help="remove duplicates", action="store_true")
 parser.add_argument("-s","--stats", help="print status at the end of execution", action="store_true")
-parser.add_argument("-ad","--add-definitions", help="request for definitions as json and save them in OUTPUT_DEF_JSON", action="store_true")
-parser.add_argument("-alpha","--alpha-sorted", help="sort result alphabetically (default chronological order)", action="store_true")
+parser.add_argument("-ad","--add-def", help="request for definitions as json and save them in OUTPUT_DEF_JSON", action="store_true")
+parser.add_argument("-alpha","--alpha-sort", help="sort result alphabetically (default chronological order)", action="store_true")
 
 # constants
 parser.add_argument("--user", help="User name for DB_PATH", type=str, required=False, default=r"Mazen")
 parser.add_argument("-db", "--db-path", help="path of the history file (the database)", type=str, required=False, default=None)
 parser.add_argument("-l", "--limit", help="limit number of words", type=int, required=False, default=9999)
 parser.add_argument("-cf", "--cache-file", help="cache file path", type=str, required=False, default=r"cache")
-parser.add_argument("-csv","--csv-export", help="export words to csv field with different fields (require --add-definitions)", type=str, required=False, default=r"sample/export.csv")
+parser.add_argument("-csv","--csv-export", help="export words to csv field with different fields (requires --add-definitions)", type=str, required=False, default=r"sample/export.csv")
 
 args = parser.parse_args()
 
@@ -41,12 +41,14 @@ CSV_EXPORT      = args.csv_export
 
 # options
 TRIM                = args.trim 
-ACCEPT_SENTENCES    = args.accept_sentences
+ACCEPT_SENTENCES    = args.accept_sent
 SPELL_CHECK         = args.spell_check
 NO_DUPLICATES       = args.no_duplicates
-ADD_DEFINITIONS     = args.add_definitions
+ADD_DEFINITIONS     = args.add_def
 PRINT_STATS         = args.stats
-ALPH_SORTED         = args.alpha_sorted  # else sorted by search-date (newest first / chronological order)
+ALPH_SORTED         = args.alpha_sort  # else sorted by search-date (newest first / chronological order)
+PROGRESS_BAR        = True # False if can't import tqdm
+
 
 # stats
 STATS_API_CALLS      = 0
@@ -71,6 +73,12 @@ if NO_DUPLICATES:
 
 if ADD_DEFINITIONS:
     import urllib.request
+
+try:
+    from tqdm import tqdm
+except ImportError:
+    PROGRESS_BAR = False
+
 
 # db path auto generating
 if DB_PATH == None:
@@ -135,10 +143,14 @@ if NO_DUPLICATES:
     words = list(unique_everseen(words))
     STATS_DUPLICATES = STATS_TOTAL_WORDS - len(words)
 
-
 # filter words (TRIM, WORDS_LIMIT, SPELL_CHECK, ACCEPT_SENTENCES)
 filtered_words = []
+if PROGRESS_BAR: 
+    filter_pbar = tqdm(total=min(WORD_LIMIT,len(words)))
+    filter_pbar.set_description("Filtering words")
 for word in words[:WORD_LIMIT]:  # WORDS_LIMIT
+    if PROGRESS_BAR: filter_pbar.update(1)
+
     # TRIM
     if TRIM:
         word = word.strip(" \t\n\r\"',.;")  # trim
@@ -155,6 +167,7 @@ for word in words[:WORD_LIMIT]:  # WORDS_LIMIT
             continue
 
     filtered_words.append(word)
+if PROGRESS_BAR: filter_pbar.close()
 STATS_FILTERED_WORDS = len(filtered_words)
 
 # export
@@ -202,10 +215,15 @@ if ADD_DEFINITIONS:
     json_data = {}
     # add definition for single words (note: words without definitions will be discarded, assumed to be wrong)
     assert not ACCEPT_SENTENCES
+    if PROGRESS_BAR:
+        def_pbar = tqdm(total=len(filtered_words))
+        def_pbar.set_description("Fetching definitions")
     for word in filtered_words:
+        if PROGRESS_BAR: def_pbar.update(1)
         definition = lookup(word)
         if definition != None:
             json_data[word] = definition
+    if PROGRESS_BAR: def_pbar.close()
 
     with open(OUTPUT_DEF_JSON, 'w') as f:
         json.dump(json_data, f)

@@ -1,1 +1,1 @@
-python3 extract_define.py --trim --spell-check --no-duplicates --stats --add-definitions -csv "sample/export.csv"
+python3 extract_define.py -t -sp -np -s -ad -csv "sample/export.csv"

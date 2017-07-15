@@ -1,2 +1,8 @@
-pyenchant
-more_itertools
+for spell check (-sp):
+    pyenchant
+
+for removing duplicates (-np):
+    more_itertools
+
+for progress bar:
+    tqdm
