@@ -1,1 +1,0 @@
-python3 extract_define.py --trim --spell-check --no-duplicates --stats --add-definitions
