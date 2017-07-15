@@ -17,7 +17,7 @@ Then you can save those words, trim them, remove duplicates and even look up for
 Change `OUTPUT_*` options.  
 
 # 3. Options
-TODO
+TODO  
 Recommended options:
 ```
 > python3 extract_define.py --trim --spell-check --no-duplicates --stats
@@ -35,9 +35,12 @@ Recommended options:
 1. [x] add help for CLI
 1. [x] cache calls for definitions (using decorators and json dump)
 1. [ ] right now `OUTPUT_DEF_JSON == CACHE_FILE` since two are the same json dumps, add options for formating `OUTPUT_DEF_JSON`
-1. [ ] separated file for meta data (such as args options)
+1. [ ] separated file for meta data (such as args options/help)
+1. [ ] regex to match any word after `def*`
 
 ## hard:
-1. [ ] csv exprot with selected headers (definition, synonyms, ... other fields from API)
+1. [x] csv export
+1. [ ] make csv (and the separator) fields customizable
 1. [ ] quiz mode (e.x. given the definition choose the word)
 1. [ ] progress bar while fetching words from API
+1. [ ] export as anki-compatible format with the option to export different fields (such as definition, synonym, etc)

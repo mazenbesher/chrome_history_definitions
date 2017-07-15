@@ -24,6 +24,8 @@ parser.add_argument("-alpha","--alpha-sorted", help="sort result alphabetically 
 parser.add_argument("--user", help="User name for DB_PATH", type=str, required=False, default=r"Mazen")
 parser.add_argument("-db", "--db-path", help="path of the history file (the database)", type=str, required=False, default=None)
 parser.add_argument("-l", "--limit", help="limit number of words", type=int, required=False, default=9999)
+parser.add_argument("-cf", "--cache-file", help="cache file path", type=str, required=False, default=r"cache")
+parser.add_argument("-csv","--csv-export", help="export words to csv field with different fields (require --add-definitions)", type=str, required=False, default=r"sample/export.csv")
 
 args = parser.parse_args()
 
@@ -32,9 +34,10 @@ USER_NAME       = args.user  # no need if DB_PATH is provided
 DICT_GET        = r"http://api.pearson.com/v2/dictionaries/ldoce5/entries?headword=" # with json response
 OUTPUT_DEF_JSON = r"sample/definitions.json"  # for definitions
 OUTPUT_WORDS    = r"sample/words.txt"
-CACHE_FILE      = r"cache"
+CACHE_FILE      = args.cache_file
 WORD_LIMIT      = args.limit
 DB_PATH         = args.db_path
+CSV_EXPORT      = args.csv_export
 
 # options
 TRIM                = args.trim 
@@ -56,6 +59,9 @@ STATS_DUPLICATES     = 0
 if ADD_DEFINITIONS and ACCEPT_SENTENCES:
     exit("Can't add definitions for sentences")
 
+if CSV_EXPORT != None and not ADD_DEFINITIONS:
+    exit("Can't export to csv if not allowed to request for definitions")
+
 # conditional imports
 if SPELL_CHECK:
     import enchant
@@ -65,6 +71,7 @@ if NO_DUPLICATES:
 
 if ADD_DEFINITIONS:
     import urllib.request
+    from collections import OrderedDict
 
 # db path auto generating
 if DB_PATH == None:
@@ -206,10 +213,35 @@ if ADD_DEFINITIONS:
 
     print("Saved definitions to: " + OUTPUT_DEF_JSON)
 
+# csv
+if CSV_EXPORT != None:
+    assert ADD_DEFINITIONS and len(json_data) > 0 # to be sure
+
+    separator = ";"
+    with open(CSV_EXPORT, 'w') as f:
+        for word in filtered_words:
+            for data in json_data.get(word, []):
+                # special for `pearson` (headword ; definition ; pos ; example)
+                senses = data.get('senses', [])
+                if senses == None: continue
+                for sense in senses:
+                    for i, definition in enumerate(sense.get('definition', [])):
+                        headword = data.get('headword', '')
+                        pos = data.get('part_of_speech', '')
+
+                        examples = sense.get('examples', [])
+                        example = ""
+                        if len(examples) > 0 and len(examples[i]) > 0:
+                            example = examples[i]['text']
+
+                        f.write(headword + separator + definition + separator + pos + separator + example + "\n")
+
+    print("Saved csv to: " + CSV_EXPORT)
+
 # print stats
 if PRINT_STATS:
     print("Total words: " + str(STATS_TOTAL_WORDS))
-    print("Filtered words: " + str(STATS_FILTERED_WORDS))
+    print("Filtered words (words remaining after filtering): " + str(STATS_FILTERED_WORDS))
 
     if NO_DUPLICATES:
         print("Duplicates: " + str(STATS_DUPLICATES))
